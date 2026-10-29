@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>نظام التاذاكر الدعم الفني</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f3f6fb;
+      color: #172033;
+      font-family: Tahoma, Arial, sans-serif;
+      line-height: 1.7;
+    }
+
+    header {
+      background: #172554;
+      color: white;
+      padding: 26px 20px;
+    }
+
+    header div, main {
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    h1 { margin: 0; font-size: 26px; }
+    header p { margin: 6px 0 0; color: #cbd5e1; }
+    main { padding: 24px 16px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat, .panel {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .stat span { display: block; color: #64748b; }
+    .stat strong { font-size: 28px; color: #2563eb; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    h2 { margin: 0 0 18px; font-size: 20px; }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input, select, textarea, button { font: inherit; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      background: white;
+      color: #172033;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #93c5fd;
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+    .field { margin-bottom: 14px; }
+
+    button {
+      padding: 11px 18px;
+      border: none;
+      border-radius: 9px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover { background: #1d4ed8; }
+    button:disabled { opacity: .6; cursor: wait; }
+    button:focus-visible {
+      outline: 3px solid #93c5fd;
+      outline-offset: 3px;
+    }
+
+    form button { width: 100%; }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar input { flex: 1; min-width: 0; }
+    .toolbar select { width: 170px; }
+
+    .ticket {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .ticket-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ticket h3 {
+      margin: 10px 0 6px;
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket p {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 8px 0;
+    }
+
+    .meta { color: #64748b; font-size: 12px; }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .low { background: #f0fdf4; color: #166534; }
+    .medium { background: #fffbeb; color: #92400e; }
+    .high { background: #fef2f2; color: #b91c1c; }
+
+    .ticket-footer {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .empty { text-align: center; padding: 24px; color: #64748b; }
+
+    #message {
+      margin: 0 0 18px;
+      color: #166534;
+      overflow-wrap: anywhere;
+    }
+
+    #message.error { color: #b91c1c; }
+
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .stats { gap: 6px; }
+      .stat { padding: 12px 8px; }
+      .stat span { font-size: 12px; }
+      .toolbar { flex-direction: column; }
+      .toolbar select { width: 100%; }
+      .panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>نظام تذاكر الدعم الفني</h1>
+      
+    </div>
+  </header>
+
+  <main>
+    <p id="message" role="status" aria-live="polite"></p>
+
+    <section class="stats" aria-label="إحصائيات التذاكر">
+      <div class="stat">
+        <span>إجمالي التذاكر</span>
+        <strong id="total">0</strong>
+      </div>
+      <div class="stat">
+        <span>غير مغلقة</span>
+        <strong id="open">0</strong>
+      </div>
+      <div class="stat">
+        <span>مغلقة</span>
+        <strong id="closed">0</strong>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section class="panel">
+        <h2>إنشاء تذكرة</h2>
+        <form id="ticketForm">
+          <div class="field">
+            <label for="customer">اسم العميل</label>
+            <input id="customer" required maxlength="80">
+          </div>
+
+          <div class="field">
+            <label for="title">عنوان المشكلة</label>
+            <input id="title" required maxlength="120">
+          </div>
+
+          <div class="field">
+            <label for="priority">الأولوية</label>
+            <select id="priority">
+              <option value="low">منخفضة</option>
+              <option value="medium" selected>متوسطة</option>
+              <option value="high">عالية</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="description">وصف المشكلة</label>
+            <textarea id="description" required maxlength="3000"></textarea>
+          </div>
+
+          <button id="saveButton" type="submit">حفظ التذكرة</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>التذاكر</h2>
+        <div class="toolbar">
+          <input id="search" type="search"
+                 aria-label="البحث في التذاكر"
+                 placeholder="ابحث بالرقم أو الاسم أو المشكلة...">
+          <select id="filter" aria-label="تصفية حسب الحالة">
+            <option value="all">جميع الحالات</option>
+            <option value="new">جديدة</option>
+            <option value="working">قيد المعالجة</option>
+            <option value="closed">مغلقة</option>
+          </select>
+        </div>
+        <div id="ticketList">
+          <div class="empty">جاري تحميل التذاكر...</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    let tickets = [];
+
+    const statuses = {
+      new: "جديدة",
+      working: "قيد المعالجة",
+      closed: "مغلقة"
+    };
+
+    const priorities = {
+      low: "منخفضة",
+      medium: "متوسطة",
+      high: "عالية"
+    };
+
+    const form = document.getElementById("ticketForm");
+    const saveButton = document.getElementById("saveButton");
+    const list = document.getElementById("ticketList");
+    const search = document.getElementById("search");
+    const filter = document.getElementById("filter");
+
+    function showMessage(text, isError = false) {
+      const message = document.getElementById("message");
+      message.textContent = text;
+      message.className = isError ? "error" : "";
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "حدث خطأ في الطلب.");
+      }
+
+      return data;
+    }
+
+    function render() {
+      document.getElementById("total").textContent = tickets.length;
+      document.getElementById("open").textContent =
+        tickets.filter(ticket => ticket.status !== "closed").length;
+      document.getElementById("closed").textContent =
+        tickets.filter(ticket => ticket.status === "closed").length;
+
+      const query = search.value.trim().toLowerCase();
+
+      const visible = tickets.filter(ticket => {
+        const text = [
+          ticket.id,
+          ticket.customer,
+          ticket.title,
+          ticket.description
+        ].join(" ").toLowerCase();
+
+        return text.includes(query) &&
+          (filter.value === "all" || ticket.status === filter.value);
+      });
+
+      if (!visible.length) {
+        list.innerHTML = '<div class="empty">' +
+          (tickets.length
+            ? "لا توجد نتائج مطابقة."
+            : "لا توجد تذاكر بعد.") +
+          "</div>";
+        return;
+      }
+
+      list.innerHTML = visible.map(ticket => `
+        <article class="ticket">
+          <div class="ticket-top">
+            <span class="meta">تذكرة #${ticket.id}</span>
+            <span class="badge ${ticket.priority}">
+              أولوية ${priorities[ticket.priority]}
+            </span>
+          </div>
+
+          <h3>${escapeHTML(ticket.title)}</h3>
+
+          <div class="meta">
+            العميل: ${escapeHTML(ticket.customer)}
+            · ${escapeHTML(
+              new Date(ticket.created_at).toLocaleString("ar")
+            )}
+          </div>
+
+          <p>${escapeHTML(ticket.description)}</p>
+
+          <div class="ticket-footer">
+            <label for="status-${ticket.id}">حالة التذكرة</label>
+            <select id="status-${ticket.id}" data-id="${ticket.id}">
+              ${Object.entries(statuses).map(([value, label]) => `
+                <option value="${value}"
+                  ${ticket.status === value ? "selected" : ""}>
+                  ${label}
+                </option>
+              `).join("")}
+            </select>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function loadTickets() {
+      try {
+        tickets = await api("/api/tickets");
+        render();
+      } catch {
+        list.innerHTML =
+          '<div class="empty">تعذر تحميل التذاكر.</div>';
+        showMessage(
+          "تعذر الاتصال بالخادم. تأكد من تشغيل server.js ثم حدّث الصفحة.",
+          true
+        );
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const body = {
+        customer: document.getElementById("customer").value.trim(),
+        title: document.getElementById("title").value.trim(),
+        description:
+          document.getElementById("description").value.trim(),
+        priority: document.getElementById("priority").value
+      };
+
+      if (!body.customer || !body.title || !body.description) {
+        showMessage("يرجى تعبئة جميع الحقول.", true);
+        return;
+      }
+
+      saveButton.disabled = true;
+      saveButton.textContent = "جاري الحفظ...";
+
+      try {
+        const ticket = await api("/api/tickets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        tickets.unshift(ticket);
+        form.reset();
+        search.value = "";
+        filter.value = "all";
+        render();
+        showMessage(`تم حفظ التذكرة رقم ${ticket.id} في قاعدة البيانات.`);
+      } catch (error) {
+        showMessage(error.message, true);
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "حفظ التذكرة";
+      }
+    });
+
+    list.addEventListener("change", async event => {
+      const select = event.target;
+      if (!select.matches("select[data-id]")) return;
+
+      const id = Number(select.dataset.id);
+      const ticket = tickets.find(item => item.id === id);
+      if (!ticket) return;
+
+      const previousStatus = ticket.status;
+      select.disabled = true;
+
+      try {
+        const updated = await api(`/api/tickets/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: select.value })
+        });
+
+        tickets = tickets.map(item => item.id === id ? updated : item);
+        render();
+        showMessage(`تم حفظ حالة التذكرة رقم ${id}.`);
+      } catch (error) {
+        select.value = previousStatus;
+        showMessage(error.message, true);
+      } finally {
+        select.disabled = false;
+      }
+    });
+
+    search.addEventListener("input", render);
+    filter.addEventListener("change", render);
+
+    loadTickets();
+  </script>
+</body>
+</html>
